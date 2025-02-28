@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, session
+from markupsafe import escape
 from extensions import db
 from models.user import User
 from models.note import Note
@@ -39,8 +40,8 @@ def create_note():
     if not current_user:
         return jsonify({'success': False, 'error': 'User not found'}), 404
 
-    title = request.form.get('title')
-    content = request.form.get('content')
+    title = escape(request.form.get('title'))
+    content = escape(request.form.get('content'))
     
     if not title or not content:
         return jsonify({'success': False, 'error': 'Title and content are required'}), 400
@@ -90,13 +91,16 @@ def search_notes():
     print(f"Search query: {query}")
     
     try:
-        sql = f"SELECT * FROM notes WHERE title LIKE '%{query}%' OR content LIKE '%{query}%'"
-        
+
+        # Use parameterized query to prevent SQL Injection
+        sql = text("SELECT * FROM notes WHERE (title LIKE :query OR content LIKE :query) AND user_id = :user_id")
+
+
         # Log the raw SQL for debugging
         print(f"Executing SQL: {sql}")
         
         # Execute the raw SQL
-        result = db.session.execute(text(sql))
+        result = db.session.execute(sql, {"query": f"%{query}%", "user_id": current_user.id})
         
         notes = []
         for row in result:
@@ -142,6 +146,10 @@ def delete_note(note_id):
 
     try:
         note = Note.query.get(note_id)
+        if note and note.user_id != current_user.id:
+            print(f"User {current_user.id} does not have permission to delete note {note_id}")
+            return jsonify({'success': False, 'error': 'Permission denied'}), 403
+
         if not note:
             print(f"Note not found: {note_id}")
             return jsonify({'success': False, 'error': f'Note with ID {note_id} not found'}), 404
