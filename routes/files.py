@@ -63,6 +63,11 @@ def upload_file():
     
     if file:  
         filename = secure_filename(file.filename)
+        
+        # Check for allowed file extensions
+        if not allowed_file(filename):
+            return jsonify({'success': False, 'error': 'Invalid file extension'}), 400
+
         file_path = os.path.join(UPLOAD_FOLDER, filename)
         print(f"File path: {file_path}")
         
