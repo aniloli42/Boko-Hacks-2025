@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, session
 import requests
 import json
 
@@ -70,11 +70,12 @@ def fetch_news():
             try:
                 filter_options = json.loads(filter_param)
                 print(f"Filter options: {filter_options}")
-                
-                if filter_options.get('showInternal') == True:
-                    # Add internal news to the results
-                    print("Adding internal news to results!")
-                    articles = INTERNAL_NEWS + articles
+
+                if 'user' in session: 
+                    if filter_options.get('showInternal') == True:
+                        # Add internal news to the results
+                        print("Adding internal news to results!")
+                        articles = INTERNAL_NEWS + articles
             except json.JSONDecodeError:
                 print(f"Invalid filter parameter: {filter_param}")
             
