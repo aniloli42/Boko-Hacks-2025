@@ -14,3 +14,12 @@
 ## Document Upload
 
 - Able to upload any file so can cause potential vulnerability
+
+## Admin Portal
+
+- SQL Injection
+- exposed admin and password
+
+## 401k
+
+- time delay can be potential dos attack
